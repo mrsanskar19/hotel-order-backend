@@ -1,0 +1,167 @@
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model User {
+  user_id       Int      @id @default(autoincrement())
+  hotel_id      Int?
+  role          Role
+  name          String
+  email         String   @unique
+  phone         String?
+  password_hash String
+  created_at    DateTime @default(now())
+  updated_at    DateTime @updatedAt
+
+  hotel    Hotel?   @relation(fields: [hotel_id], references: [hotel_id])
+  orders   Order[]
+  reviews  Review[]
+}
+
+model Hotel {
+  hotel_id    Int      @id @default(autoincrement())
+  name        String
+  description String?
+  address     String?
+  city        String?
+  state       String?
+  country     String?
+  postal_code String?
+  phone       String?
+  email       String?
+  status      HotelStatus @default(ACTIVE)
+  created_at  DateTime @default(now())
+
+  users       User[]
+  settings    HotelSetting[]
+  categories  MenuCategory[]
+  items       MenuItem[]
+  orders      Order[]
+  reviews     Review[]  // ✅ now has opposite relation in Review
+}
+
+model HotelSetting {
+  setting_id Int    @id @default(autoincrement())
+  hotel_id   Int
+  key_name   String
+  key_value  String
+
+  hotel Hotel @relation(fields: [hotel_id], references: [hotel_id])
+}
+
+model MenuCategory {
+  category_id Int    @id @default(autoincrement())
+  hotel_id    Int
+  name        String
+  description String?
+
+  hotel Hotel    @relation(fields: [hotel_id], references: [hotel_id])
+  items MenuItem[]
+}
+
+model MenuItem {
+  item_id     Int     @id @default(autoincrement())
+  category_id Int
+  hotel_id    Int
+  name        String
+  description String?
+  price       Float
+  available   Boolean @default(true)
+
+  category   MenuCategory @relation(fields: [category_id], references: [category_id])
+  hotel      Hotel        @relation(fields: [hotel_id], references: [hotel_id])
+  order_items OrderItem[]
+  reviews     Review[]    // ✅ opposite side of Review.item
+}
+
+model Order {
+  order_id      Int       @id @default(autoincrement())
+  hotel_id      Int
+  customer_id   Int
+  status        OrderStatus @default(PENDING)
+  total_amount  Float
+  payment_status PaymentStatus @default(PENDING)
+  created_at    DateTime @default(now())
+  updated_at    DateTime @updatedAt
+
+  hotel    Hotel @relation(fields: [hotel_id], references: [hotel_id])
+  customer User  @relation(fields: [customer_id], references: [user_id])
+  items    OrderItem[]
+  payments Payment[]
+}
+
+model OrderItem {
+  order_item_id Int   @id @default(autoincrement())
+  order_id      Int
+  item_id       Int
+  quantity      Int
+  price         Float
+
+  order Order    @relation(fields: [order_id], references: [order_id])
+  item  MenuItem @relation(fields: [item_id], references: [item_id])
+}
+
+model Payment {
+  payment_id     Int    @id @default(autoincrement())
+  order_id       Int
+  amount         Float
+  payment_method PaymentMethod
+  status         PaymentStatus
+  transaction_id String?
+  created_at     DateTime @default(now())
+
+  order Order @relation(fields: [order_id], references: [order_id])
+}
+
+model Review {
+  review_id   Int      @id @default(autoincrement())
+  item_id     Int
+  customer_id Int
+  rating      Int
+  comment     String?
+  created_at  DateTime @default(now())
+
+  item     MenuItem @relation(fields: [item_id], references: [item_id])
+  customer User     @relation(fields: [customer_id], references: [user_id])
+  hotel    Hotel?   @relation(fields: [hotel_id], references: [hotel_id]) // ✅ optional link to hotel
+  hotel_id Int?
+}
+
+enum Role {
+  hotel_admin
+  customer
+  system_admin
+}
+
+enum HotelStatus {
+  ACTIVE
+  INACTIVE
+}
+
+enum OrderStatus {
+  PENDING
+  CONFIRMED
+  PREPARING
+  READY
+  DELIVERED
+  CANCELLED
+}
+
+enum PaymentStatus {
+  PENDING
+  PAID
+  REFUNDED
+}
+
+enum PaymentMethod {
+  CARD
+  CASH
+  WALLET
+  UPI
+}
+
