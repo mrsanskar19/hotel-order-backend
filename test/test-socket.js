@@ -2,7 +2,7 @@
 const { io } = require("socket.io-client");
 
 // connect to your NestJS gateway
-const socket = io("http://localhost:3000", {
+const socket = io("https://hotel-order-backend-qls5.onrender.com", {
   transports: ["websocket"], // force websocket only
 });
 
