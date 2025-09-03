@@ -18,157 +18,141 @@ export class OrderGateway {
   @WebSocketServer()
   server: Server;
 
-  // ✅ Join hotel room
-  @SubscribeMessage('join_hotel')
-  async handleJoinHotel(
+  // ✅ Join hotel + table room
+  @SubscribeMessage('join_table')
+  async handleJoinTable(
     @ConnectedSocket() client: Socket,
-    @MessageBody() data: { hotelId: number },
+    @MessageBody() data: { hotelId: number; tableNo: number },
   ) {
-    // Join hotel
-const hotel = await this.prisma.hotel.findUnique({
-  where: { hotel_id: Number(data.hotelId) }, // ✅ force int
-});
-
+    const hotel = await this.prisma.hotel.findUnique({
+      where: { hotel_id: Number(data.hotelId) },
+    });
 
     if (!hotel) {
       client.emit('error', { message: `Hotel ${data.hotelId} does not exist` });
       return;
     }
 
-    const room = `hotel:${data.hotelId}`;
+    const room = `hotel:${data.hotelId}:table:${data.tableNo}`;
     client.join(room);
-    client.emit('joined', { room, hotel });
+    client.emit('joined', { room, hotel, tableNo: data.tableNo });
   }
 
-  // ✅ User posts a new order
- @SubscribeMessage('post_order')
-async handlePostOrder(
-  @ConnectedSocket() client: Socket,
-  @MessageBody()
-  data: { hotelId: number; userId: number; items: { itemId: number; qty: number; price?: number }[] },
-) {
-  // 1. Validate hotel
-  const hotel = await this.prisma.hotel.findUnique({ where: { hotel_id: data.hotelId } });
-  if (!hotel) throw new Error("Hotel not found");
+  // ✅ Start a new order for a table
+  @SubscribeMessage('start_order')
+  async handleStartOrder(
+    @ConnectedSocket() client: Socket,
+    @MessageBody()
+    data: { hotelId: number; tableNo: number; userId: number },
+  ) {
+    const hotel = await this.prisma.hotel.findUnique({
+      where: { hotel_id: Number(data.hotelId) },
+    });
+    if (!hotel) throw new Error('Hotel not found');
 
-  // 2. Validate user
- 
-
-  // 3. Validate items exist
-  const itemIds = data.items.map(i => i.itemId);
-  const existingItems = await this.prisma.menuItem.findMany({
-    where: { item_id: { in: itemIds } },
-    select: { item_id: true, price: true },
-  });
-  if (existingItems.length !== itemIds.length) {
-    throw new Error("One or more items not found");
-  }
-
-  // 4. Compute total safely
-  const totalAmount = data.items.reduce((sum, i) => {
-    const item = existingItems.find(e => e.item_id === i.itemId);
-    const price = i.price ?? item?.price ?? 0; // fallback to DB price if not provided
-    return sum + price * i.qty;
-  }, 0);
-
-console.log(hotel,existingItems,totalAmount)
-  // 5. Create order
- try {
-  const order = await this.prisma.order.create({
-    data: {
-      hotel_id: data.hotelId,
-      customer_id: data.userId,
-      status: "PENDING",
-      total_amount: totalAmount,
-      items: {
-        create: data.items.map(i => {
-          const item = existingItems.find(e => e.item_id === i.itemId);
-          const price = i.price ?? item?.price ?? 0;
-          return {
-            item_id: i.itemId,
-            quantity: i.qty,
-            price,
-          };
-        }),
+    // Check if a PENDING order already exists for this table
+    let order = await this.prisma.order.findFirst({
+      where: {
+        hotel_id: data.hotelId,
+        table_no: data.tableNo,
+        status: OrderStatus.PENDING,
       },
-    },
-    include: { items: true },
-  });
+      include: { items: true },
+    });
 
-  console.log("✅ Order created:", JSON.stringify(order, null, 2));
-  const room = `hotel:${data.hotelId}`;
-  this.server.to(room).emit('new_order', order);
-  client.emit('order_created', order);
-} catch (err: any) {
-  console.error("❌ Prisma Error:");
-  console.error("Message:", err.message);
-  console.error("Code:", err.code);
-  console.error("Meta:", err.meta);
-  console.error("Stack:", err.stack);
-}
-}
+    if (!order) {
+      // Create new empty order
+      order = await this.prisma.order.create({
+        data: {
+          hotel_id: data.hotelId,
+          table_no: data.tableNo,
+          customer_id: data.userId,
+          status: OrderStatus.PENDING,
+          total_amount: 0,
+        },
+        include: { items: true },
+      });
+    }
 
-  // ✅ Add items to existing order
+    const room = `hotel:${data.hotelId}:table:${data.tableNo}`;
+    this.server.to(room).emit('order_started', order);
+    client.emit('order_started', order);
+  }
+
+  // ✅ Add items (new or existing order)
   @SubscribeMessage('add_item')
   async handleAddItem(
     @ConnectedSocket() client: Socket,
-    @MessageBody() data: { orderId: number; itemId: number; qty: number; price: number },
+    @MessageBody()
+    data: { hotelId: number; tableNo: number; orderId?: number; itemId: number; qty: number; price?: number },
   ) {
-  const orderExists = await this.prisma.order.findUnique({
-  where: { order_id: data.orderId },
-});
-if (!orderExists) throw new Error("Order not found before update");
+    // 1. Validate order
+    let order = data.orderId
+      ? await this.prisma.order.findUnique({ where: { order_id: data.orderId } })
+      : await this.prisma.order.findFirst({
+          where: {
+            hotel_id: data.hotelId,
+            table_no: data.tableNo,
+            status: OrderStatus.PENDING,
+          },
+        });
 
-    // Add item
-const order = await this.prisma.order.update({
-  where: { order_id: data.orderId }, // must exist
-  data: {
-    items: {
-      create: {
-        item_id: data.itemId,     // must exist
-        quantity: data.qty,
-        price: data.price,
+    if (!order) throw new Error('No active order found for this table');
+
+    // 2. Validate item
+    const item = await this.prisma.menuItem.findUnique({
+      where: { item_id: data.itemId },
+    });
+    if (!item) throw new Error('Item not found');
+
+    const finalPrice = data.price ?? item.price;
+
+    // 3. Add item to order
+    order = await this.prisma.order.update({
+      where: { order_id: order.order_id },
+      data: {
+        items: {
+          create: {
+            item_id: data.itemId,
+            quantity: data.qty,
+            price: finalPrice,
+          },
+        },
+        total_amount: { increment: finalPrice * data.qty },
       },
-    },
-    total_amount: {
-      increment: data.qty * data.price,
-    },
-  },
-  include: { items: true },
-});
+      include: { items: true },
+    });
 
-    const room = `hotel:${order.hotel_id}`;
+    const room = `hotel:${data.hotel_id}:table:${order.table_no}`;
     this.server.to(room).emit('order_updated', order);
   }
 
-  // ✅ Close/Cancel order
+  // ✅ Close order
   @SubscribeMessage('close_order')
   async handleCloseOrder(
     @ConnectedSocket() client: Socket,
     @MessageBody() data: { orderId: number },
   ) {
-    // Close order
-try {
-  const order = await this.prisma.order.update({
-    where: { order_id: Number(data.orderId) },
-    data: { status: OrderStatus.CANCELLED },
-  });
+    try {
+      const order = await this.prisma.order.update({
+        where: { order_id: Number(data.orderId) },
+        data: { status: OrderStatus.CANCELLED },
+      });
 
-  const room = `hotel:${order.hotel_id}`;
-  this.server.to(room).emit('order_closed', order);
-} catch (err) {
-  client.emit('error', { message: `Order ${data.orderId} not found` }); // ✅ handle gracefully
-}
-
+      const room = `hotel:${order.hotel_id}:table:${order.table_no}`;
+      this.server.to(room).emit('order_closed', order);
+    } catch (err) {
+      client.emit('error', { message: `Order ${data.orderId} not found` });
+    }
   }
 
-  // ✅ Chat inside hotel room
+  // ✅ Chat inside a table
   @SubscribeMessage('send_message')
   handleSendMessage(
     @ConnectedSocket() client: Socket,
-    @MessageBody() data: { hotelId: number; message: string },
+    @MessageBody() data: { hotelId: number; tableNo: number; message: string },
   ) {
-    const room = `hotel:${data.hotelId}`;
+    const room = `hotel:${data.hotelId}:table:${data.tableNo}`;
     this.server.to(room).emit('new_message', {
       from: client.id,
       message: data.message,

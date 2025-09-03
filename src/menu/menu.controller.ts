@@ -25,9 +25,33 @@ export class MenuController {
     });
   }
 
+  // Fetch all menu items for a hotel (all categories combined)
+  @Get('items')
+  async getAllItems(@Param('hotelId') hotelId: string) {
+    return this.prisma.menuItem.findMany({
+      where: { hotel_id: Number(hotelId) },
+    });
+  }
+
+  // Create a menu item directly under hotel (category optional)
+  @Post('items')
+  async createItemForHotel(@Param('hotelId') hotelId: string, @Body() body: any) {
+    return this.prisma.menuItem.create({
+      data: {
+        name: body.name,
+        price: body.price,
+        hotel_id: Number(hotelId),
+        category_id: body.categoryId ? Number(body.categoryId) : null,
+      },
+    });
+  }
+
   // Fetch items in a category
   @Get('categories/:categoryId/items')
-  async getItems(@Param('hotelId') hotelId: string, @Param('categoryId') categoryId: string) {
+  async getItems(
+    @Param('hotelId') hotelId: string,
+    @Param('categoryId') categoryId: string,
+  ) {
     return this.prisma.menuItem.findMany({
       where: {
         hotel_id: Number(hotelId),
@@ -36,9 +60,9 @@ export class MenuController {
     });
   }
 
-  // Create item in a category
+  // Create item in a specific category
   @Post('categories/:categoryId/items')
-  async createItem(
+  async createItemInCategory(
     @Param('hotelId') hotelId: string,
     @Param('categoryId') categoryId: string,
     @Body() body: any,
