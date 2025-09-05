@@ -1,44 +1,32 @@
-import { Controller, Get, Post, Param, Body, NotFoundException } from '@nestjs/common';
-import { PrismaService } from '../prisma/prisma.service';
+import { Controller, Get, Post, Put, Delete, Param, Body } from '@nestjs/common';
+import { ReviewService } from './review.service';
 
-@Controller('reviews')
+@Controller('hotel/:hotelId/item/:itemId/review')
 export class ReviewController {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(private readonly reviewService: ReviewService) {}
 
-  // ✅ GET all reviews for a specific item
-  // /reviews/item/:itemId
-  @Get('item/:itemId')
-  async findByItem(@Param('itemId') itemId: string) {
-    return this.prisma.review.findMany({
-      where: { item_id: Number(itemId) },
-      include: { item: true, customer: true },
-      orderBy: { created_at: 'desc' },
-    });
-  }
-
-  // ✅ GET single review by ID
-  @Get(':id')
-  async findOne(@Param('id') id: string) {
-    const review = await this.prisma.review.findUnique({
-      where: { review_id: Number(id) },
-      include: { item: true, customer: true },
-    });
-
-    if (!review) throw new NotFoundException(`Review ${id} not found`);
-    return review;
-  }
-
-  // ✅ POST /reviews → create a review for an item
   @Post()
-  async create(@Body() body: any) {
-    return this.prisma.review.create({
-      data: {
-        item_id: body.item_id,
-        customer_id: body.customer_id,
-        rating: body.rating,
-        comment: body.comment,
-      },
-    });
+  create(@Param('hotelId') hotelId: string, @Param('itemId') itemId: string, @Body() data: { customer_id: number; rating: number; comment?: string }) {
+    return this.reviewService.create(+hotelId, +itemId, data);
+  }
+
+  @Get()
+  findAll(@Param('hotelId') hotelId: string, @Param('itemId') itemId: string) {
+    return this.reviewService.findAll(+hotelId, +itemId);
+  }
+
+  @Get(':reviewId')
+  findOne(@Param('hotelId') hotelId: string, @Param('itemId') itemId: string, @Param('reviewId') reviewId: string) {
+    return this.reviewService.findOne(+hotelId, +itemId, +reviewId);
+  }
+
+  @Put(':reviewId')
+  update(@Param('hotelId') hotelId: string, @Param('itemId') itemId: string, @Param('reviewId') reviewId: string, @Body() data: { rating?: number; comment?: string }) {
+    return this.reviewService.update(+hotelId, +itemId, +reviewId, data);
+  }
+
+  @Delete(':reviewId')
+  remove(@Param('hotelId') hotelId: string, @Param('itemId') itemId: string, @Param('reviewId') reviewId: string) {
+    return this.reviewService.remove(+hotelId, +itemId, +reviewId);
   }
 }
-

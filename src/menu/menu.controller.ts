@@ -1,80 +1,32 @@
-// src/menu/menu.controller.ts
-import { Controller, Get, Post, Param, Body } from '@nestjs/common';
-import { PrismaService } from '../prisma/prisma.service';
+import { Controller, Get, Post, Put, Delete, Param, Body } from '@nestjs/common';
+import { MenuCategoryService } from './menu.service';
 
-@Controller('hotels/:hotelId/')
+@Controller('hotel/:hotelId/categories')
 export class MenuController {
-  constructor(private prisma: PrismaService) {}
+  constructor(private readonly menuCategoryService: MenuCategoryService) {}
 
-  // Fetch all categories for a hotel
-  @Get('categories')
-  async getCategories(@Param('hotelId') hotelId: string) {
-    return this.prisma.menuCategory.findMany({
-      where: { hotel_id: Number(hotelId) },
-    });
+  @Post()
+  create(@Param('hotelId') hotelId: string, @Body() data: { name: string; description?: string; image?: string }) {
+    return this.menuCategoryService.create(+hotelId, data);
   }
 
-  // Create a category for a hotel
-  @Post('categories')
-  async createCategory(@Param('hotelId') hotelId: string, @Body() body: any) {
-    return this.prisma.menuCategory.create({
-      data: {
-        name: body.name,
-        hotel_id: Number(hotelId),
-      },
-    });
+  @Get()
+  findAll(@Param('hotelId') hotelId: string) {
+    return this.menuCategoryService.findAll(+hotelId);
   }
 
-  // Fetch all menu items for a hotel (all categories combined)
-  @Get('items')
-  async getAllItems(@Param('hotelId') hotelId: string) {
-    return this.prisma.menuItem.findMany({
-      where: { hotel_id: Number(hotelId) },
-    });
+  @Get(':id')
+  findOne(@Param('hotelId') hotelId: string, @Param('id') id: string) {
+    return this.menuCategoryService.findOne(+hotelId, +id);
   }
 
-  // Create a menu item directly under hotel (category optional)
-  @Post('items')
-  async createItemForHotel(@Param('hotelId') hotelId: string, @Body() body: any) {
-    return this.prisma.menuItem.create({
-      data: {
-        name: body.name,
-        price: body.price,
-        hotel_id: Number(hotelId),
-        category_id: body.categoryId ? Number(body.categoryId) : null,
-      },
-    });
+  @Put(':id')
+  update(@Param('hotelId') hotelId: string, @Param('id') id: string, @Body() data: { name?: string; description?: string; image?: string }) {
+    return this.menuCategoryService.update(+hotelId, +id, data);
   }
 
-  // Fetch items in a category
-  @Get('categories/:categoryId/items')
-  async getItems(
-    @Param('hotelId') hotelId: string,
-    @Param('categoryId') categoryId: string,
-  ) {
-    return this.prisma.menuItem.findMany({
-      where: {
-        hotel_id: Number(hotelId),
-        category_id: Number(categoryId),
-      },
-    });
-  }
-
-  // Create item in a specific category
-  @Post('categories/:categoryId/items')
-  async createItemInCategory(
-    @Param('hotelId') hotelId: string,
-    @Param('categoryId') categoryId: string,
-    @Body() body: any,
-  ) {
-    return this.prisma.menuItem.create({
-      data: {
-        name: body.name,
-        price: body.price,
-        hotel_id: Number(hotelId),
-        category_id: Number(categoryId),
-      },
-    });
+  @Delete(':id')
+  remove(@Param('hotelId') hotelId: string, @Param('id') id: string) {
+    return this.menuCategoryService.remove(+hotelId, +id);
   }
 }
-

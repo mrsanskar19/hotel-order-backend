@@ -1,38 +1,54 @@
-import { Controller, Get, Post, Body, Param, Patch, UseGuards } from '@nestjs/common';
-import { PrismaService } from '../prisma/prisma.service';
-import { OrderStatus } from '@prisma/client';
-import { ApiKeyGuard } from '../common/guards/api-key.guard';
+import { Controller, Get, Post, Put, Delete, Param, Body, BadRequestException } from '@nestjs/common';
+import { OrderService } from './orders.service';
+import { OrderStatus, PaymentMethod } from '@prisma/client';
 
-@Controller('orders')
-@UseGuards(ApiKeyGuard)
+@Controller('hotel/:hotelId/orders')
 export class OrdersController {
-  constructor(private prisma: PrismaService) {}
+  constructor(private readonly orderService: OrderService) {}
 
-  @Post(':hotelId')
-  createOrder(@Param('hotelId') hotelId: string, @Body() body: any) {
-    return this.prisma.order.create({
-      data: {
-        ...body,
-        hotel_id: Number(hotelId),
-        customer_id: Number(body.customer_id),
-      },
-    });
+  @Post()
+  create(@Param('hotelId') hotelId: string, @Body() data: { customer_id: number; table_id?: string; total_amount: number; payment_mode: string; status?: string; items: { item_id: number; quantity: number; price: number }[] }) {
+    const paymentMode = Object.values(PaymentMethod).includes(data.payment_mode as PaymentMethod)
+    ? data.payment_mode as PaymentMethod
+    : null;
+    if (!paymentMode) {
+      throw new BadRequestException('Invalid payment mode');
+    }
+    const status = data.status && Object.values(OrderStatus).includes(data.status as OrderStatus)
+    ? data.status as OrderStatus
+    : undefined;
+    return this.orderService.create(+hotelId, { ...data, payment_mode: paymentMode, status });
   }
 
-  @Patch(':orderId/status')
-  updateStatus(@Param('orderId') orderId: string, @Body() body: { status: string }) {
-    return this.prisma.order.update({
-      where: { order_id: Number(orderId) },
-      data: { status: body.status as OrderStatus }
-    });
+  @Get()
+  findAll(@Param('hotelId') hotelId: string) {
+    return this.orderService.findAll(+hotelId);
   }
 
-  @Get(':hotelId')
-  getOrders(@Param('hotelId') hotelId: string) {
-    return this.prisma.order.findMany({
-      where: { hotel_id: Number(hotelId) },
-      include: { items: true }
-    });
+  @Get(':orderId')
+  findOne(@Param('hotelId') hotelId: string, @Param('orderId') orderId: string) {
+    return this.orderService.findOne(+hotelId, +orderId);
+  }
+
+  @Put(':orderId')
+  update(@Param('hotelId') hotelId: string, @Param('orderId') orderId: string, @Body() data: { table_id?: string; total_amount?: number; payment_mode?: string; status?: string }) {
+    const paymentMode = data.payment_mode && Object.values(PaymentMethod).includes(data.payment_mode as PaymentMethod)
+    ? data.payment_mode as PaymentMethod
+    : undefined;
+    const status = data.status && Object.values(OrderStatus).includes(data.status as OrderStatus)
+    ? data.status as OrderStatus
+    : undefined;
+    if (data.payment_mode && !paymentMode) {
+      throw new BadRequestException('Invalid payment mode');
+    }
+    if (data.status && !status) {
+      throw new BadRequestException('Invalid status');
+    }
+    return this.orderService.update(+hotelId, +orderId, { ...data, payment_mode: paymentMode, status });
+  }
+
+  @Delete(':orderId')
+  remove(@Param('hotelId') hotelId: string, @Param('orderId') orderId: string) {
+    return this.orderService.remove(+hotelId, +orderId);
   }
 }
-
