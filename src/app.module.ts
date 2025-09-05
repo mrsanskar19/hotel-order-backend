@@ -8,9 +8,10 @@ import { MenuModule } from './menu/menu.module';
 import { OrdersModule } from './orders/orders.module';
 import { ReviewModule } from './review/review.module';
 import { AuthModule } from './auth/auth.module';
+import { MenuItemModule } from './menu-item/menu-item.module';
 
 @Module({
-  imports: [HotelsModule, MenuModule, OrdersModule,ReviewModule,AuthModule],
+  imports: [HotelsModule, MenuModule, OrdersModule,ReviewModule,AuthModule,MenuItemModule],
   controllers: [AppController],
   providers: [AppService,OrderGateway,PrismaService],
   exports:[PrismaService]
