@@ -24,9 +24,9 @@ export class AuthController {
       throw new Error('Username and password are required');
     }
 
-    const hotel = await this.prisma.hotel.findUnique({
-      where: { username: data.username },
-    });
+   const hotel = await this.prisma.hotel.findFirst({
+  where: { username: data.username },
+});
     console.log(data.username);
     console.log(data.password);
     console.log(hotel);
