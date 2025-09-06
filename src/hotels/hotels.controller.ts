@@ -24,4 +24,13 @@ export class HotelsController {
   remove(@Param('id') id: string) {
     return this.hotelService.remove(+id);
   }
+  @Get(':id/report')
+  getHotelReport(@Param('id') id: string) {
+    return this.hotelService.getHotelReport(+id);
+  }
+
+  @Get(':id/revenue')
+  getHotelRevenue(@Param('id') id: string) {
+    return this.hotelService.getHotelRevenue(+id);
+  }
 }

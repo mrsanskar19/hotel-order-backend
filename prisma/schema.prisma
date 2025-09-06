@@ -21,6 +21,8 @@ model Hotel {
   username         String    @unique   // ✅ added username
   password         String              // ✅ added password (store hash, not plain text)
   created_at       DateTime  @default(now())
+  table_count      Int       @default(5)
+  plan             String    @default("FREE")
 
   categories       MenuCategory[]
   items            MenuItem[]
@@ -48,6 +50,8 @@ model MenuItem {
   description String?
   price       Float
   available   Boolean @default(true)
+  img        String?
+  discount   Float?   // percentage or fixed amount discount
 
   category   MenuCategory @relation(fields: [category_id], references: [category_id])
   hotel      Hotel        @relation(fields: [hotel_id], references: [hotel_id])
@@ -67,7 +71,7 @@ model Customer {
 model Order {
   order_id      Int       @id @default(autoincrement())
   hotel_id      Int
-  customer_id   Int
+  customer_id   Int?
   table_id      String?    // dine-in table or delivery reference
   total_amount  Float
   payment_mode  PaymentMethod
@@ -75,7 +79,7 @@ model Order {
   created_at    DateTime @default(now())
 
   hotel    Hotel    @relation(fields: [hotel_id], references: [hotel_id])
-  customer Customer @relation(fields: [customer_id], references: [customer_id])
+  customer Customer? @relation(fields: [customer_id], references: [customer_id])
   items    OrderItem[]   // ✅ one order can have multiple items
 }
 

@@ -1,0 +1,19 @@
+{
+  "orders": [],
+  "tables": [
+    { "id": 1, "name": "T1", "status": "", "order_id": "", "hotel_id": "H1" },
+    { "id": 2, "name": "T2", "status": "", "order_id": "", "hotel_id": "H1" },
+    { "id": 3, "name": "T3", "status": "", "order_id": "", "hotel_id": "H1" },
+    { "id": 4, "name": "T1", "status": "", "order_id": "", "hotel_id": "H2" },
+    { "id": 5, "name": "T2", "status": "", "order_id": "", "hotel_id": "H2" },
+    { "id": 6, "name": "T3", "status": "", "order_id": "", "hotel_id": "H2" },
+    { "id": 7, "name": "T1", "status": "", "order_id": "", "hotel_id": "H3" },
+    { "id": 8, "name": "T2", "status": "", "order_id": "", "hotel_id": "H3" },
+    { "id": 9, "name": "T3", "status": "", "order_id": "", "hotel_id": "H3" },
+    { "id": 10, "name": "T1", "status": "", "order_id": "", "hotel_id": "H4" },
+    { "id": 11, "name": "T2", "status": "", "order_id": "", "hotel_id": "H4" },
+    { "id": 12, "name": "T3", "status": "", "order_id": "", "hotel_id": "H4" },
+    { "id": 13, "name": "T1", "status": "", "order_id": "", "hotel_id": "H5" },
+    { "id": 14, "name": "T2", "status": "", "order_id": "", "hotel_id": "H5" }
+  ]
+}

@@ -22,7 +22,13 @@ export class MenuItemService {
     }
 
     findAll(hotelId: number) {
-        return this.prisma.menuItem.findMany({ where: { hotel_id: hotelId } });
+        return this.prisma.menuItem.findMany({
+            where: { hotel_id: hotelId },
+            include: {
+                category: true,
+                reviews: true,
+            },
+        });
     }
 
     findOne(hotelId: number, itemId: number) {
