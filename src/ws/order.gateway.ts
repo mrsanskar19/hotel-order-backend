@@ -113,7 +113,7 @@ export class OrderGateway {
     @MessageBody() data: { hotelId: number },
   ) {
     const orders = this.orders.filter((o) => o.hotel_id === data.hotelId);
-    this.server.to(`hotel:${data.hotelId}`).emit('dashboardOrders', orders);
+    this.server.to(`hotel:${data.hotelId}`).emit('getDashboardOrders', orders);
     return orders;
   }
 
@@ -124,7 +124,7 @@ export class OrderGateway {
   ) {
 
     const tables = this.tables.filter((t) => t.hotel_id === data.hotelId);
-    this.server.to(`hotel:${data.hotelId}`).emit('dashboardTables', tables);
+    this.server.to(`hotel:${data.hotelId}`).emit('getTableData', tables);
     return tables;
   }
 
