@@ -1,3 +1,4 @@
+
 import {
   WebSocketGateway,
   WebSocketServer,
@@ -44,6 +45,23 @@ export class OrderGateway {
     @MessageBody() data: { hotelId: number; tableId: string },
   ) {
     const room = `hotel:${data.hotelId}:table:${data.tableId}`;
+    // Check if table already exists before pushing a new entry
+    let table = this.tables.find(
+      (t) => t.hotel_id === data.hotelId && t.table_id === data.tableId
+    );
+    if (!table) {
+      // Only push if not already present
+      table = {
+        hotel_id: data.hotelId,
+        table_id: data.tableId,
+        status: 'OCCUPIED',
+      };
+      this.tables.push(table);
+    } else {
+      // Update status if already exists
+      table.status = 'OCCUPIED';
+    }
+    this.saveTempData();
     this.server.socketsJoin(room);
     return { message: `Joined ${room}` };
   }
@@ -99,21 +117,16 @@ export class OrderGateway {
     return orders;
   }
 
-  // If you have a Table model in your DB, fetch from Prisma. Otherwise, remove this or implement as needed.
+
   @SubscribeMessage('getTableData')
   async handleGetTableData(
     @MessageBody() data: { hotelId: number },
   ) {
+
     const tables = this.tables.filter((t) => t.hotel_id === data.hotelId);
     this.server.to(`hotel:${data.hotelId}`).emit('dashboardTables', tables);
     return tables;
   }
-
-  // Removed in-memory handleGetOrders (use the @SubscribeMessage version below)
-
-  // Removed in-memory handleCreateOrder (use the @SubscribeMessage version below)
-
-  // Removed in-memory handleUpdateOrderStatus (use the @SubscribeMessage version below)
 
   @SubscribeMessage('getOrders')
   async handleGetOrders(
