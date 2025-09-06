@@ -113,7 +113,7 @@ export class OrderGateway {
     @MessageBody() data: { hotelId: number },
   ) {
     const orders = this.orders.filter((o) => o.hotel_id === data.hotelId);
-    this.server.to(`hotel:${data.hotelId}`).emit('getDashboardOrders', orders);
+    this.server.to(`hotel:${data.hotelId}`).emit('dashboardOrders', orders);
     return orders;
   }
 
@@ -122,9 +122,9 @@ export class OrderGateway {
   async handleGetTableData(
     @MessageBody() data: { hotelId: number },
   ) {
-
+    
     const tables = this.tables.filter((t) => t.hotel_id === data.hotelId);
-    this.server.to(`hotel:${data.hotelId}`).emit('getTableData', tables);
+    this.server.to(`hotel:${data.hotelId}`).emit('dashboardTables', tables);
     return tables;
   }
 
