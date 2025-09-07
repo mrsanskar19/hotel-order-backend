@@ -1,11 +1,10 @@
-datasource db {
-  provider  = "postgresql"
-  url       = env("DATABASE_URL")
-  directUrl = env("DIRECT_URL")
-}
-
 generator client {
   provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
 }
 
 model Hotel {
@@ -19,8 +18,8 @@ model Hotel {
   active_time      String?   // e.g. "9 AM - 11 PM"
   parcel_available Boolean   @default(true)
   is_active        Boolean   @default(true)
-  username         String    @unique   // ✅ added username
-  password         String              // ✅ added password (store hash, not plain text)
+  username         String    @unique
+  password         String
   created_at       DateTime  @default(now())
   table_count      Int       @default(5)
   plan             String    @default("FREE")
@@ -31,15 +30,14 @@ model Hotel {
   orders           Order[]
 }
 
-
 model MenuCategory {
   category_id Int    @id @default(autoincrement())
   hotel_id    Int
   name        String
   description String?
-  image       String?   // ✅ one image per category
+  image       String?
 
-  hotel Hotel    @relation(fields: [hotel_id], references: [hotel_id])
+  hotel Hotel        @relation(fields: [hotel_id], references: [hotel_id])
   items MenuItem[]
 }
 
@@ -51,8 +49,8 @@ model MenuItem {
   description String?
   price       Float
   available   Boolean @default(true)
-  img        String?
-  discount   Float?   // percentage or fixed amount discount
+  img         String?
+  discount    Float?
 
   category   MenuCategory @relation(fields: [category_id], references: [category_id])
   hotel      Hotel        @relation(fields: [hotel_id], references: [hotel_id])
@@ -73,7 +71,7 @@ model Order {
   order_id      Int       @id @default(autoincrement())
   hotel_id      Int
   customer_id   Int?
-  table_id      String?    // dine-in table or delivery reference
+  table_id      String?
   total_amount  Float
   payment_mode  PaymentMethod
   status        OrderStatus @default(PENDING)
@@ -81,7 +79,7 @@ model Order {
 
   hotel    Hotel    @relation(fields: [hotel_id], references: [hotel_id])
   customer Customer? @relation(fields: [customer_id], references: [customer_id])
-  items    OrderItem[]   // ✅ one order can have multiple items
+  items    OrderItem[]
 }
 
 model OrderItem {
@@ -89,7 +87,7 @@ model OrderItem {
   order_id      Int
   item_id       Int
   quantity      Int
-  price         Float   // snapshot of price at order time
+  price         Float
 
   order Order    @relation(fields: [order_id], references: [order_id])
   item  MenuItem @relation(fields: [item_id], references: [item_id])
