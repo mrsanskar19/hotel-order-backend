@@ -21,34 +21,21 @@ export class AuthController {
   @Post('login')
   async login(@Body() data: { username: string; password: string }) {
     if (!data?.username || !data?.password) {
-      throw new Error('Username and password are required');
+      throw new BadRequestException('Username and password are required');
     }
 
    const hotel = await this.prisma.hotel.findFirst({
-  where: { username: data.username },
-});
-    console.log(data.username);
-    console.log(data.password);
-    console.log(hotel);
+      where: { username: data.username },
+    });
 
     if (!hotel) {
-      throw new Error('Hotel not found');
+      throw new UnauthorizedException('Invalid username or password');
     }
 
-    if (data.password === 'test123') {
-      return {
-        message: "Test login successful",
-        payload: {
-          sub: hotel.hotel_id,
-          username: hotel.username,
-        },
-      };
+    const passwordMatch = await bcrypt.compare(data.password, hotel.password);
+    if (!passwordMatch) {
+      throw new UnauthorizedException('Invalid username or password');
     }
-
-    // const passwordMatch = await bcrypt.compare(data.password, hotel.password);
-    // if (!passwordMatch) {
-    //   throw new Error("Invalid password");
-    // }
 
     return {
       message: "Login successful",

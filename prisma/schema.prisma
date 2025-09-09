@@ -1,3 +1,4 @@
+
 generator client {
   provider = "prisma-client-js"
 }
@@ -8,21 +9,28 @@ datasource db {
 }
 
 model Hotel {
-  hotel_id         Int       @id @default(autoincrement())
-  name             String
-  description      String?
-  email            String?   @unique
-  phone            String?
-  address          String?
-  images           String?
-  active_time      String?   // e.g. "9 AM - 11 PM"
-  parcel_available Boolean   @default(true)
-  is_active        Boolean   @default(true)
-  username         String    @unique
-  password         String
-  created_at       DateTime  @default(now())
-  table_count      Int       @default(5)
-  plan             String    @default("FREE")
+  hotel_id                  Int                  @id @default(autoincrement())
+  name                      String
+  description               String?
+  email                     String?              @unique
+  phone                     String?
+  address                   String?
+  images                    String?
+  active_time               String?
+  parcel_available          Boolean              @default(true)
+  is_active                 Boolean              @default(true)
+  username                  String               @unique
+  password                  String
+  created_at                DateTime             @default(now())
+
+  // Plan and Subscription details
+  plan_name                 String               @default("FREE")
+  subscription_status       SubscriptionStatus   @default(ACTIVE)
+  subscription_start_date   DateTime?
+  subscription_end_date     DateTime?
+  max_tables_limit          Int                  @default(5)    // Max tables allowed under the plan
+  max_items_limit           Int                  @default(50)   // Max menu items allowed
+  max_orders_limit          Int                  @default(100)  // Max orders per month
 
   categories       MenuCategory[]
   items            MenuItem[]
@@ -68,16 +76,22 @@ model Customer {
 }
 
 model Order {
-  order_id      Int       @id @default(autoincrement())
+  order_id      Int           @id @default(autoincrement())
   hotel_id      Int
   customer_id   Int?
   table_id      String?
+  sub_total     Float
+  discount      Float         @default(0)
+  tax           Float         @default(0)
   total_amount  Float
   payment_mode  PaymentMethod
-  status        OrderStatus @default(PENDING)
-  created_at    DateTime @default(now())
+  order_type    OrderType     @default(DINE_IN)
+  notes         String?
+  status        OrderStatus   @default(PENDING)
+  created_at    DateTime      @default(now())
+  updated_at    DateTime      @updatedAt
 
-  hotel    Hotel    @relation(fields: [hotel_id], references: [hotel_id])
+  hotel    Hotel     @relation(fields: [hotel_id], references: [hotel_id])
   customer Customer? @relation(fields: [customer_id], references: [customer_id])
   items    OrderItem[]
 }
@@ -88,6 +102,9 @@ model OrderItem {
   item_id       Int
   quantity      Int
   price         Float
+  customizations String? // e.g., "extra spicy, no onions"
+  status        OrderItemStatus @default(PENDING)
+
 
   order Order    @relation(fields: [order_id], references: [order_id])
   item  MenuItem @relation(fields: [item_id], references: [item_id])
@@ -107,12 +124,33 @@ model Review {
   customer Customer @relation(fields: [customer_id], references: [customer_id])
 }
 
+enum SubscriptionStatus {
+  ACTIVE
+  INACTIVE
+  EXPIRED
+  CANCELLED
+}
+
+enum OrderType {
+  DINE_IN
+  TAKEAWAY
+  DELIVERY
+}
+
 enum OrderStatus {
   PENDING
   CONFIRMED
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+  REFUNDED
+}
+
+enum OrderItemStatus {
+  PENDING
   PREPARING
   READY
-  DELIVERED
+  SERVED
   CANCELLED
 }
 
