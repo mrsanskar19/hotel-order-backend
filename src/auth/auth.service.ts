@@ -1,16 +1,36 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import { Injectable, UnauthorizedException, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
+import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
 
 @Injectable()
 export class AuthService {
-    constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private jwtService: JwtService,
+  ) {}
 
-    // async validateHotel(username: string, password: string) {
-    //     const hotel = await this.prisma.hotel.findUnique({ where: { username:username } });
-    //     if (hotel || !(await bcrypt.compare(password, hotel.password))) {
-    //         throw new UnauthorizedException('Invalid credentials');
-    //     }
-    //     return hotel;
-    // }
+  async login(data: { username: string; password: string }) {
+    if (!data?.username || !data?.password) {
+      throw new BadRequestException('Username and password are required');
+    }
+
+    const hotel = await this.prisma.hotel.findFirst({
+      where: { username: data.username },
+    });
+
+    if (!hotel) {
+      throw new UnauthorizedException('Invalid credentials');
+    }
+
+    const passwordMatch = await bcrypt.compare(data.password, hotel.password);
+    if (!passwordMatch) {
+      throw new UnauthorizedException('Invalid credentials');
+    }
+
+    const payload = { sub: hotel.hotel_id, username: hotel.username };
+    return {
+      access_token: this.jwtService.sign(payload),
+    };
+  }
 }

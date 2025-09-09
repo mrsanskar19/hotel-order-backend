@@ -2,24 +2,16 @@ import {
   Controller,
   Post,
   Body,
-  BadRequestException,
-  UnauthorizedException,
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
-import { PrismaService } from '../prisma/prisma.service';
-import * as bcrypt from 'bcrypt';
-import { JwtService } from '@nestjs/jwt';
 
 @Controller('auth')
 export class AuthController {
-  constructor(
-    private readonly authService: AuthService,
-    private readonly jwtService: JwtService,
-    private prisma: PrismaService,
-  ) {}
+  constructor(private readonly authService: AuthService) {}
 
   @Post('login')
   async login(@Body() data: { username: string; password: string }) {
+<<<<<<< HEAD
     if (!data?.username || !data?.password) {
       throw new BadRequestException('Username and password are required');
     }
@@ -44,6 +36,9 @@ export class AuthController {
         username: hotel.username,
       },
     };
+=======
+    return this.authService.login(data);
+>>>>>>> 3185f70 (eror)
   }
 
   @Post('logout')
