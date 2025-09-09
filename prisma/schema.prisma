@@ -23,6 +23,7 @@ model Hotel {
   created_at       DateTime       @default(now())
   table_count      Int            @default(5)
   plan             String         @default("FREE")
+  upi_id           String?
   categories       MenuCategory[]
   items            MenuItem[]
   orders           Order[]
