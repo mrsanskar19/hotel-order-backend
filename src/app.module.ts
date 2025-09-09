@@ -10,7 +10,6 @@ import { ReviewModule } from './review/review.module';
 import { AuthModule } from './auth/auth.module';
 import { MenuItemModule } from './menu-item/menu-item.module';
 import { OrderModule } from './order/orders.module';
-import { AdminModule } from './admin/admin.module';
 
 @Module({
   imports: [
@@ -20,8 +19,7 @@ import { AdminModule } from './admin/admin.module';
     ReviewModule,
     AuthModule,
     MenuItemModule,
-    OrderModule,
-    AdminModule
+    OrderModule
   ],
   controllers: [AppController],
   providers: [AppService, OrderGateway, PrismaService],
