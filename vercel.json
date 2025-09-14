@@ -15,9 +15,14 @@
         "POST",
         "PUT",
         "DELETE",
-        "OPTION"
-      ]
+        "PATCH",
+        "OPTIONS"
+      ],
+      "headers":{
+        "Access-Control-Allow-Origin":"*"
+      }
     }
-  ]
+  ],
+  "outputDirectory":"dist"
 }
 
