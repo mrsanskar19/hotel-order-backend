@@ -12,7 +12,7 @@ export class MenuItemService {
         if (data.price < 0) {
             throw new BadRequestException('Price cannot be negative');
         }
-        const category = await this.prisma.menuCategory.findUnique({ where: { category_id: data.category_id, hotel_id: hotelId } });
+        const category = await this.prisma.category.findUnique({ where: { category_id: data.category_id, hotel_id: hotelId } });
         if (!category) {
             throw new BadRequestException('Invalid category for this hotel');
         }
@@ -42,7 +42,7 @@ export class MenuItemService {
             throw new BadRequestException('Price cannot be negative');
         }
         if (data.category_id) {
-            const category = await this.prisma.menuCategory.findUnique({ where: { category_id: data.category_id, hotel_id: hotelId } });
+            const category = await this.prisma.category.findUnique({ where: { category_id: data.category_id, hotel_id: hotelId } });
             if (!category) {
                 throw new BadRequestException('Invalid category for this hotel');
             }
