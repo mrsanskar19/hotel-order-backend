@@ -6,7 +6,7 @@
   "private": true,
   "license": "LICENSED",
   "scripts": {
-    "build": "nest build -o public",
+    "build": "nest build",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
     "start": "npx prisma generate && node dist/main.js",
     "start:dev": "nest start --watch",
