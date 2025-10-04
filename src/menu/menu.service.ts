@@ -9,13 +9,13 @@ export class MenuCategoryService {
         if (!data.name) {
             throw new BadRequestException('Category name is required');
         }
-        return this.prisma.menuCategory.create({
+        return this.prisma.category.create({
             data: { ...data, hotel_id: hotelId },
         });
     }
 
     findAll(hotelId: number) {
-        return this.prisma.menuCategory.findMany({ where: { hotel_id: hotelId } });
+        return this.prisma.category.findMany({ where: { hotel_id: hotelId } });
     }
 
     findOne(hotelId: number, id: number) {
@@ -25,14 +25,14 @@ export class MenuCategoryService {
     }
 
     update(hotelId: number, id: number, data: { name?: string; description?: string; image?: string }) {
-        return this.prisma.menuCategory.update({
+        return this.prisma.category.update({
             where: { category_id: id, hotel_id: hotelId },
             data,
         });
     }
 
     remove(hotelId: number, id: number) {
-        return this.prisma.menuCategory.delete({
+        return this.prisma.category.delete({
             where: { category_id: id, hotel_id: hotelId },
         });
     }
