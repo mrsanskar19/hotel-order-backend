@@ -3,28 +3,28 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider = "sqlite"
+  url      = "file:./dev.db"
 }
 
 model Hotel {
-  hotel_id         Int            @id @default(autoincrement())
+  hotel_id         Int        @id @default(autoincrement())
   name             String
   description      String?
-  email            String?        @unique
+  email            String?    @unique
   phone            String?
   address          String?
   images           String?
   active_time      String?
-  parcel_available Boolean        @default(true)
-  is_active        Boolean        @default(true)
-  username         String         @unique
+  parcel_available Boolean    @default(true)
+  is_active        Boolean    @default(true)
+  username         String     @unique
   password         String
-  created_at       DateTime       @default(now())
-  table_count      Int            @default(5)
-  plan             String         @default("FREE")
+  created_at       DateTime   @default(now())
+  table_count      Int        @default(5)
+  plan             String     @default("FREE")
   upi_id           String?
-  categories       MenuCategory[]
+  categories       Category[]
   items            MenuItem[]
   orders           Order[]
   reviews          Review[]
@@ -41,17 +41,17 @@ model Category {
 }
 
 model MenuItem {
-  item_id     Int          @id @default(autoincrement())
+  item_id     Int         @id @default(autoincrement())
   category_id Int
   hotel_id    Int
   name        String
   description String?
   price       Float
-  available   Boolean      @default(true)
+  available   Boolean     @default(true)
   img         String?
   discount    Float?
-  category    MenuCategory @relation(fields: [category_id], references: [category_id])
-  hotel       Hotel        @relation(fields: [hotel_id], references: [hotel_id])
+  category    Category    @relation(fields: [category_id], references: [category_id])
+  hotel       Hotel       @relation(fields: [hotel_id], references: [hotel_id])
   orders      OrderItem[]
   reviews     Review[]
 }

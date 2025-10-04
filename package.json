@@ -1,14 +1,14 @@
 {
   "name": "backend",
-  "version": "0.0.1",
+  "version": "1.0.1",
   "description": "",
-  "author": "",
+  "author": "Mr. Sanskar Bandgar",
   "private": true,
-  "license": "UNLICENSED",
+  "license": "LICENSED",
   "scripts": {
     "build": "nest build",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
-    "start": "nest start",
+    "start": "npx prisma generate && nest start",
     "start:dev": "nest start --watch",
     "start:debug": "nest start --debug --watch",
     "start:prod": "node dist/main",
