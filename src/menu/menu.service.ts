@@ -19,7 +19,7 @@ export class MenuCategoryService {
     }
 
     findOne(hotelId: number, id: number) {
-        return this.prisma.menuCategory.findUnique({
+        return this.prisma.category.findUnique({
             where: { category_id: id, hotel_id: hotelId },
         });
     }
