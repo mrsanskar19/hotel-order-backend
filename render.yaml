@@ -1,0 +1,25 @@
+services:
+  - type: web
+    name: hotel-order-backend
+    runtime: node
+    buildCommand: npm run build
+    startCommand: npm run start:prod
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: DATABASE_URL
+        fromSecret: database_url
+      - key: JWT_SECRET
+        fromSecret: jwt_secret
+      - key: API_KEY
+        fromSecret: api_key
+  - type: pserv
+    name: hotel-order-db
+    runtime: postgres
+    envVars:
+      - key: POSTGRES_DB
+        value: hotel_order
+      - key: POSTGRES_USER
+        value: hotel_user
+      - key: POSTGRES_PASSWORD
+        fromSecret: db_password
