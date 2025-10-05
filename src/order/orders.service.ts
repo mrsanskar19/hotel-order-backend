@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { OrderStatus, PaymentMethod } from '@prisma/client';
+import { Prisma } from '@prisma/client';
 import { FileStorage } from '../common/utils/file-storage';
 
 type OrderItem = { item_id: number; quantity: number; price: number };
@@ -10,8 +10,8 @@ export interface Order {
   customer_id: number;
   table_id: string;
   total_amount: number;
-  payment_mode: PaymentMethod;
-  status: OrderStatus;
+  payment_mode: string;
+  status: string;
   items: OrderItem[];
 }
 
@@ -69,7 +69,7 @@ export class OrdersService {
     hotelId: number;
     tableId: string;
     total_amount: number;
-    payment_mode: PaymentMethod;
+    payment_mode: string;
     items: OrderItem[];
   }) {
     const orders = await this.ordersStorage.getAll();
@@ -81,7 +81,7 @@ export class OrdersService {
       table_id: data.tableId,
       total_amount: data.total_amount,
       payment_mode: data.payment_mode,
-      status: OrderStatus.PENDING,
+      status: 'PENDING',
       items: data.items,
     };
 
@@ -95,7 +95,7 @@ export class OrdersService {
 
   async updateOrderStatus(
     orderId: number,
-    data: { hotelId: number; tableId: string; status: OrderStatus },
+    data: { hotelId: number; tableId: string; status: string },
   ) {
     const orders = await this.ordersStorage.getAll();
     const index = orders.findIndex(o => o.order_id === orderId);
@@ -169,8 +169,8 @@ export class OrdersService {
       customer_id: 1,
       table_id: data.tableId,
       total_amount: 0,
-      payment_mode: PaymentMethod.CASH,
-      status: OrderStatus.PENDING,
+      payment_mode: 'CASH',
+      status: 'PENDING',
       items: data.items ?? [],
     };
 
@@ -197,7 +197,7 @@ export class OrdersService {
       order_id: Date.now(),
       hotel_id: data.hotelId,
       table_id: data.tableId,
-      status: OrderStatus.PENDING,
+      status: 'PENDING',
     };
 
     orders.push(newOrder);

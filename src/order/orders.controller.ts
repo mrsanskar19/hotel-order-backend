@@ -7,7 +7,7 @@ import {
   Param,
 } from '@nestjs/common';
 import { OrdersService } from './orders.service';
-import { PaymentMethod, OrderStatus } from '@prisma/client';
+import { Prisma } from '@prisma/client';
 
 @Controller('orders')
 export class OrdersController {
@@ -54,7 +54,7 @@ export class OrdersController {
       hotelId: number;
       tableId: string;
       total_amount: number;
-      payment_mode: PaymentMethod;
+      payment_mode: string;
       items: { item_id: number; quantity: number; price: number }[];
     },
   ) {
@@ -82,7 +82,7 @@ export class OrdersController {
     data: {
       hotelId: number;
       tableId: string;
-      status: OrderStatus;
+      status: string;
     },
   ) {
     return this.ordersService.updateOrderStatus(Number(orderId), data);

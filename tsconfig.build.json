@@ -1,7 +1,7 @@
 {
   "extends": "./tsconfig.json",
    "compilerOptions": {
-    "outDir": "./public"  // 👈 change from "dist" to "build" or any other
+    "outDir": "./dist"
   },
   "exclude": ["node_modules", "test", "dist", "**/*spec.ts"]
 }
